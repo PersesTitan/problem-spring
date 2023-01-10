@@ -1,11 +1,12 @@
 package com.shabi.problemspring.domain.member;
 
-import com.shabi.problemspring.domain.member.dto.MemberDTO;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.shabi.problemspring.domain.member.dto.MemberCreateDTO;
+import com.shabi.problemspring.domain.member.dto.MemberEditDTO;
 import com.shabi.problemspring.domain.problem.Problem;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.*;
-import org.springframework.cglib.core.Local;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -26,19 +27,20 @@ public class Member implements Serializable {
     private String loginId;
     private String password;
 
-    private final LocalDateTime createDate = LocalDateTime.now(); // 생성일
+    private LocalDateTime createDate; // 생성일
 
     @PastOrPresent
     private LocalDateTime updateDate;       // 최종 수정일
 
+    @JsonIgnore
     @ToString.Exclude
-    @JoinColumn(name = "problem_id")
-    @OneToMany(targetEntity = Problem.class, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "member")
     private final List<Problem> problems = new ArrayList<>();
 
     private Member(String loginId, String password) {
         this.loginId = loginId;
         this.password = password;
+        this.createDate = LocalDateTime.now();
         this.updateDate = LocalDateTime.now();
     }
 
@@ -46,7 +48,7 @@ public class Member implements Serializable {
         return new Member(loginId, password);
     }
 
-    public static Member create(MemberDTO memberDTO) {
+    public static Member create(MemberCreateDTO memberDTO) {
         return new Member(memberDTO.loginId(), memberDTO.password());
     }
 
@@ -59,5 +61,9 @@ public class Member implements Serializable {
         update();
         this.loginId = loginId;
         this.password = password;
+    }
+
+    public void update(MemberEditDTO memberEditDTO) {
+        update(memberEditDTO.loginId(), memberEditDTO.password());
     }
 }
